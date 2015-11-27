@@ -20,6 +20,7 @@ import android.content.Context;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -70,7 +71,10 @@ public class RobotoCalendarView extends LinearLayout {
     private static final String FIRST_UNDERLINE = "firstUnderlineView";
     private static final String SECOND_UNDERLINE = "secondUnderlineView";
 
-    boolean isMarkToday = false;
+    public boolean isMarkToday = false;
+    public boolean isOpenWeekMode = false;
+    boolean inWeekMode = false;
+    View[] Layout_WeekNumber = new View[6];
 
     // ************************************************************************************************************************************************************************
     // * Initialization methods
@@ -92,9 +96,17 @@ public class RobotoCalendarView extends LinearLayout {
     }
 
     public View onCreateView() {
-
         LayoutInflater inflate = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         view = inflate.inflate(R.layout.roboto_calendar_picker_layout, this, true);
+
+
+        Layout_WeekNumber[0] = view.findViewById(R.id.layout_week1);
+        Layout_WeekNumber[1] = view.findViewById(R.id.layout_week2);
+        Layout_WeekNumber[2] = view.findViewById(R.id.layout_week3);
+        Layout_WeekNumber[3] = view.findViewById(R.id.layout_week4);
+        Layout_WeekNumber[4] = view.findViewById(R.id.layout_week5);
+        Layout_WeekNumber[5] = view.findViewById(R.id.layout_week6);
+
 
         findViewsById(view);
 
@@ -107,6 +119,7 @@ public class RobotoCalendarView extends LinearLayout {
                         .setFontAttrId(R.attr.fontPath)
                         .build()
         );
+
 
         return view;
     }
@@ -227,6 +240,7 @@ public class RobotoCalendarView extends LinearLayout {
         int firstDayOfMonth = auxCalendar.get(Calendar.DAY_OF_WEEK);
         TextView dayOfMonthText;
         ViewGroup dayOfMonthContainer;
+        Calendar now = Calendar.getInstance();
 
 
         // Calculate dayOfMonthIndex
@@ -242,15 +256,17 @@ public class RobotoCalendarView extends LinearLayout {
             dayOfMonthText.setVisibility(View.VISIBLE);
             dayOfMonthText.setText(String.valueOf(i));
 
-            if ((i - 1 + firstDayOfMonth) % 7 == 1)
-                dayOfMonthText.setTextColor(Color.RED);
-            else if ((i - 1 + firstDayOfMonth) % 7 == 0)
-                dayOfMonthText.setTextColor(Color.GREEN);
-            else
-                dayOfMonthText.setTextColor(Color.BLACK);
+            if (locale.getCountry().contains("TW")) {
+                if ((i - 1 + firstDayOfMonth) % 7 == 1)
+                    dayOfMonthText.setTextColor(Color.RED);
+                else if ((i - 1 + firstDayOfMonth) % 7 == 0)
+                    dayOfMonthText.setTextColor(Color.GREEN);
+                else
+                    dayOfMonthText.setTextColor(Color.BLACK);
+            }
+
 
             if (isMarkToday) {
-                Calendar now = Calendar.getInstance();
                 if (auxCalendar.get(Calendar.MONTH) == now.get(Calendar.MONTH)) {
                     if (i == now.get(Calendar.DAY_OF_MONTH)) {
                         dayOfMonthText.setTextColor(context.getResources().getColor(R.color.roboto_calendar_current_day_of_month));
@@ -263,14 +279,30 @@ public class RobotoCalendarView extends LinearLayout {
 
         }
 
-        // If the last week row has no visible days, hide it or show it in case
-        ViewGroup weekRow = (ViewGroup) view.findViewWithTag("weekRow6");
-        dayOfMonthText = (TextView) view.findViewWithTag("dayOfMonthText36");
-        if (dayOfMonthText.getVisibility() == INVISIBLE) {
-            weekRow.setVisibility(GONE);
-        } else {
-            weekRow.setVisibility(VISIBLE);
+        if(inWeekMode) {
+            for(View each:Layout_WeekNumber)
+                each.setVisibility(View.GONE);
+            if(currentCalendar.get(Calendar.YEAR)==now.get(Calendar.YEAR) && currentCalendar.get(Calendar.MONTH)==now.get(Calendar.MONTH)) {
+                //Same Year,Same Month
+                Layout_WeekNumber[now.get(Calendar.WEEK_OF_MONTH)-1].setVisibility(View.VISIBLE);
+            }
+            else {
+                view.findViewById(R.id.layout_week1).setVisibility(View.VISIBLE);
+            }
+
         }
+        else {
+            // If the last week row has no visible days, hide it or show it in case
+            ViewGroup weekRow = (ViewGroup) view.findViewWithTag("weekRow6");
+            dayOfMonthText = (TextView) view.findViewWithTag("dayOfMonthText36");
+            if (dayOfMonthText.getVisibility() == INVISIBLE) {
+                weekRow.setVisibility(GONE);
+            } else {
+                weekRow.setVisibility(VISIBLE);
+            }
+        }
+
+
     }
 
     private void clearDayOfTheMonthStyle(Date currentDate) {
@@ -282,6 +314,64 @@ public class RobotoCalendarView extends LinearLayout {
             dayOfMonthBackground.setBackgroundResource(android.R.color.transparent);
         }
     }
+
+
+    final static int MOVE_THRESHOLD = 50;
+    float start_y;
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        super.onInterceptTouchEvent(ev);
+        int action = ev.getActionMasked();
+        switch (action) {
+            case MotionEvent.ACTION_DOWN:
+                start_y = ev.getY();
+                break;
+            case MotionEvent.ACTION_MOVE:
+                //Log.i("RoCalendar", "onInterceptTouchEvent.ACTION_MOVE");
+
+                if(isOpenWeekMode) {
+                    if ((ev.getY() - start_y) > MOVE_THRESHOLD) {
+                        inWeekMode = false;
+                        start_y = ev.getY();
+
+                        for(View each:Layout_WeekNumber)
+                            each.setVisibility(View.VISIBLE);
+
+                        // If the last week row has no visible days, hide it or show it in case
+                        ViewGroup weekRow = (ViewGroup) view.findViewWithTag("weekRow6");
+                        TextView dayOfMonthText = (TextView) view.findViewWithTag("dayOfMonthText36");
+                        if (dayOfMonthText.getVisibility() == INVISIBLE) {
+                            weekRow.setVisibility(GONE);
+                        } else {
+                            weekRow.setVisibility(VISIBLE);
+                        }
+
+                    } else if ((ev.getY() - start_y) < -MOVE_THRESHOLD) {
+                        inWeekMode = true;
+                        start_y = ev.getY();
+
+                        for(View each:Layout_WeekNumber)
+                            each.setVisibility(View.GONE);
+
+                        Calendar now = Calendar.getInstance();
+                        if(currentCalendar.get(Calendar.YEAR)==now.get(Calendar.YEAR) && currentCalendar.get(Calendar.MONTH)==now.get(Calendar.MONTH)) {
+                            //Same Year,Same Month
+                            Layout_WeekNumber[now.get(Calendar.WEEK_OF_MONTH)-1].setVisibility(View.VISIBLE);
+                        }
+                        else {
+                            view.findViewById(R.id.layout_week1).setVisibility(View.VISIBLE);
+                        }
+
+                    }
+                }
+                break;
+            case MotionEvent.ACTION_CANCEL:
+            case MotionEvent.ACTION_UP:
+                break;
+        }
+        return false;
+    }
+
 
     // ************************************************************************************************************************************************************************
     // * Getter methods
@@ -385,18 +475,6 @@ public class RobotoCalendarView extends LinearLayout {
         }
     }
 
-    public void markToday(Date currentDate) {
-        if (currentDate != null) {
-            isMarkToday = true;
-            Calendar currentCalendar = getCurrentCalendar();
-            currentCalendar.setTime(currentDate);
-            TextView dayOfMonth = getDayOfMonthText(currentCalendar);
-            dayOfMonth.setTextColor(context.getResources().getColor(R.color.roboto_calendar_current_day_of_month));
-
-            ViewGroup dayOfMonthBackground = getDayOfMonthBackground(currentCalendar);
-            dayOfMonthBackground.setBackgroundResource(R.drawable.circle);
-        }
-    }
 
     public void markDayAsSelectedDay(Date currentDate) {
 
@@ -442,6 +520,7 @@ public class RobotoCalendarView extends LinearLayout {
         underline.setVisibility(View.VISIBLE);
         underline.setBackgroundResource(style);
     }
+
 
     // ************************************************************************************************************************************************************************
     // * Public interface
