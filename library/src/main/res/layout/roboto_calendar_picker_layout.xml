@@ -27,36 +27,42 @@
 
         <include
             layout="@layout/roboto_calendar_week_1"
+            android:id="@+id/layout_week1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/roboto_calendar_week_bottom_padding" />
 
         <include
             layout="@layout/roboto_calendar_week_2"
+            android:id="@+id/layout_week2"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/roboto_calendar_week_bottom_padding" />
 
         <include
             layout="@layout/roboto_calendar_week_3"
+            android:id="@+id/layout_week3"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/roboto_calendar_week_bottom_padding" />
 
         <include
             layout="@layout/roboto_calendar_week_4"
+            android:id="@+id/layout_week4"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/roboto_calendar_week_bottom_padding" />
 
         <include
             layout="@layout/roboto_calendar_week_5"
+            android:id="@+id/layout_week5"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="@dimen/roboto_calendar_week_bottom_padding" />
 
         <include
             layout="@layout/roboto_calendar_week_6"
+            android:id="@+id/layout_week6"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
     </LinearLayout>
