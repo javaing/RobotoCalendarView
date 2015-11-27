@@ -181,7 +181,10 @@ public class RobotoCalendarView extends LinearLayout {
         if (i == 4 && locale.getCountry().equals("ES")) {
             dayOfTheWeekString = "X";
         } else {
-            dayOfTheWeekString = dayOfTheWeekString.substring(0, 1).toUpperCase();
+            if (locale.getCountry().contains("TW"))
+                dayOfTheWeekString = dayOfTheWeekString.substring(0, 2).toUpperCase();
+            else
+                dayOfTheWeekString = dayOfTheWeekString.substring(0, 1).toUpperCase();
         }
         return dayOfTheWeekString;
     }
@@ -234,6 +237,11 @@ public class RobotoCalendarView extends LinearLayout {
             dayOfMonthContainer.setOnClickListener(onDayOfMonthClickListener);
             dayOfMonthText.setVisibility(View.VISIBLE);
             dayOfMonthText.setText(String.valueOf(i));
+            
+            if ((i-1+firstDayOfMonth)%7 == 1)
+                dayOfMonthText.setTextColor(Color.RED);
+            else if ((i-1+firstDayOfMonth)%7 == 0)
+                dayOfMonthText.setTextColor(Color.GREEN);
         }
 
         // If the last week row has no visible days, hide it or show it in case
