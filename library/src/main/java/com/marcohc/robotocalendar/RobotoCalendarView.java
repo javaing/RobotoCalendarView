@@ -17,6 +17,7 @@ package com.marcohc.robotocalendar;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -68,6 +69,8 @@ public class RobotoCalendarView extends LinearLayout {
     private static final String DAY_OF_MONTH_CONTAINER = "dayOfMonthContainer";
     private static final String FIRST_UNDERLINE = "firstUnderlineView";
     private static final String SECOND_UNDERLINE = "secondUnderlineView";
+
+    boolean isMarkToday = false;
 
     // ************************************************************************************************************************************************************************
     // * Initialization methods
@@ -225,6 +228,7 @@ public class RobotoCalendarView extends LinearLayout {
         TextView dayOfMonthText;
         ViewGroup dayOfMonthContainer;
 
+
         // Calculate dayOfMonthIndex
         int dayOfMonthIndex = getWeekIndex(firstDayOfMonth, auxCalendar);
 
@@ -237,11 +241,26 @@ public class RobotoCalendarView extends LinearLayout {
             dayOfMonthContainer.setOnClickListener(onDayOfMonthClickListener);
             dayOfMonthText.setVisibility(View.VISIBLE);
             dayOfMonthText.setText(String.valueOf(i));
-            
-            if ((i-1+firstDayOfMonth)%7 == 1)
+
+            if ((i - 1 + firstDayOfMonth) % 7 == 1)
                 dayOfMonthText.setTextColor(Color.RED);
-            else if ((i-1+firstDayOfMonth)%7 == 0)
+            else if ((i - 1 + firstDayOfMonth) % 7 == 0)
                 dayOfMonthText.setTextColor(Color.GREEN);
+            else
+                dayOfMonthText.setTextColor(Color.BLACK);
+
+            if (isMarkToday) {
+                Calendar now = Calendar.getInstance();
+                if (auxCalendar.get(Calendar.MONTH) == now.get(Calendar.MONTH)) {
+                    if (i == now.get(Calendar.DAY_OF_MONTH)) {
+                        dayOfMonthText.setTextColor(context.getResources().getColor(R.color.roboto_calendar_current_day_of_month));
+
+                        ViewGroup dayOfMonthBackground = getDayOfMonthBackground(now);
+                        dayOfMonthBackground.setBackgroundResource(R.drawable.circle);
+                    }
+                }
+            }
+
         }
 
         // If the last week row has no visible days, hide it or show it in case
@@ -363,6 +382,19 @@ public class RobotoCalendarView extends LinearLayout {
             currentCalendar.setTime(currentDate);
             TextView dayOfMonth = getDayOfMonthText(currentCalendar);
             dayOfMonth.setTextColor(context.getResources().getColor(R.color.roboto_calendar_current_day_of_month));
+        }
+    }
+
+    public void markToday(Date currentDate) {
+        if (currentDate != null) {
+            isMarkToday = true;
+            Calendar currentCalendar = getCurrentCalendar();
+            currentCalendar.setTime(currentDate);
+            TextView dayOfMonth = getDayOfMonthText(currentCalendar);
+            dayOfMonth.setTextColor(context.getResources().getColor(R.color.roboto_calendar_current_day_of_month));
+
+            ViewGroup dayOfMonthBackground = getDayOfMonthBackground(currentCalendar);
+            dayOfMonthBackground.setBackgroundResource(R.drawable.circle);
         }
     }
 
